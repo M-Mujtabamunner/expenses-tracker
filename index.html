@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Expense Tracker Pro</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -54,7 +53,7 @@ canvas{margin-top:20px}
 <input id="pass" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 <button class="secondary" onclick="guest()">Skip & Continue</button>
-<p class="small">Demo login (stored locally)</p>
+<p class="small">Login is stored locally (demo mode)</p>
 </div>
 
 <!-- APP -->
@@ -92,7 +91,7 @@ canvas{margin-top:20px}
 
 <!-- ANALYSIS -->
 <div id="analysis" class="card hidden">
-<h2>AI Insights 🤖</h2>
+<h2>Insights & Analysis 🤖</h2>
 <p id="insights"></p>
 
 <canvas id="pie"></canvas>
@@ -186,9 +185,9 @@ function aiInsights(){
   })
   let maxCat = Object.keys(cat).sort((a,b)=>cat[b]-cat[a])[0]
   insights.innerHTML = `
-  🔍 You spend most on <b>${maxCat || "nothing yet"}</b><br>
-  💸 Wishes take <b>${Math.round(wish/total*100||0)}%</b> of your spending<br>
-  📌 Tip: Reduce wishes & track daily needs
+  🔍 Highest spending on <b>${maxCat || "none"}</b><br>
+  💸 Wishes are <b>${Math.round(wish/total*100||0)}%</b> of total<br>
+  📌 Try reducing unnecessary expenses!
   `
 }
 function charts(){
@@ -208,6 +207,7 @@ const nameInput=name
 const amountInput=amount
 const list=document.getElementById("list")
 const totalEl=total
+
 </script>
 
 </body>
