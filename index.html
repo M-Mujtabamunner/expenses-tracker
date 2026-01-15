@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Expense Tracker</title>
+<title>Expense Tracker Pro</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -14,59 +15,31 @@
   --text:#e5e7eb;
 }
 *{box-sizing:border-box;font-family:system-ui}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-}
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:20px;
-}
-.card{
-  background:var(--card);
-  padding:20px;
-  border-radius:16px;
-  margin-bottom:16px;
-}
+body{margin:0;background:var(--bg);color:var(--text)}
+.container{max-width:500px;margin:auto;padding:16px}
+.card{background:var(--card);padding:18px;border-radius:18px;margin-bottom:14px}
 h1,h2{text-align:center}
 input,select,button{
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  border-radius:10px;
-  border:none;
+  width:100%;padding:14px;margin:6px 0;
+  border-radius:12px;border:none;font-size:15px
 }
-button{
-  background:var(--accent);
-  font-weight:bold;
-  cursor:pointer;
-}
-.expense{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:10px;
-  font-size:14px;
-}
-.badge{
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-}
+button{background:var(--accent);font-weight:700;cursor:pointer}
+.secondary{background:#1e293b;color:white}
+.expense{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.badge{padding:4px 8px;border-radius:8px;font-size:12px}
 .home{background:#22c55e}
 .outdoor{background:#f97316}
-.need{background:#eab308}
-.wish{background:#ec4899}
-.nav{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
+.food{background:#eab308}
+.travel{background:#60a5fa}
+.need{background:#84cc16}
+.wish{background:#f472b6}
+.optional{background:#64748b}
+.hidden{display:none}
+.small{font-size:13px;color:#94a3b8}
 a{color:var(--accent);text-decoration:none}
 canvas{margin-top:20px}
-.hidden{display:none}
+.logout{background:#ef4444}
 </style>
 </head>
 
@@ -74,12 +47,24 @@ canvas{margin-top:20px}
 
 <div class="container">
 
-<div class="nav">
-<h2>💰 Expense Tracker</h2>
-<a href="#" onclick="showAnalysis()">📊 Analysis</a>
+<!-- 🔐 LOGIN -->
+<div id="login" class="card">
+<h1>💰 Expense Tracker</h1>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="guest()">Skip & Continue</button>
+<p class="small">Demo login (stored locally)</p>
 </div>
 
-<!-- ADD EXPENSE -->
+<!-- APP -->
+<div id="app" class="hidden">
+
+<div class="row">
+<h2>Dashboard</h2>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
 <div class="card">
 <input id="name" placeholder="Expense name">
 <input id="amount" type="number" placeholder="Amount">
@@ -94,111 +79,135 @@ canvas{margin-top:20px}
 <select id="type">
 <option value="need">Need</option>
 <option value="wish">Wish</option>
-<option value="">Optional</option>
+<option value="optional">Optional</option>
 </select>
 
 <button onclick="addExpense()">Add Expense</button>
 </div>
 
-<!-- EXPENSE LIST -->
 <div id="list"></div>
-
 <h3 id="total"></h3>
 
+<button class="secondary" onclick="showAnalysis()">📊 View Analysis</button>
+
 <!-- ANALYSIS -->
-<div id="analysis" class="hidden">
-<h2>📊 Analysis</h2>
-<a href="#" onclick="hideAnalysis()">⬅ Back</a>
+<div id="analysis" class="card hidden">
+<h2>AI Insights 🤖</h2>
+<p id="insights"></p>
 
 <canvas id="pie"></canvas>
 <canvas id="bar"></canvas>
+
+<button class="secondary" onclick="hideAnalysis()">⬅ Back</button>
 </div>
 
+</div>
 </div>
 
 <script>
 let expenses = JSON.parse(localStorage.getItem("expenses")) || []
 
-function save(){
-  localStorage.setItem("expenses", JSON.stringify(expenses))
+/* ---------- AUTH ---------- */
+function login(){
+  localStorage.setItem("user", user.value)
+  showApp()
 }
+function guest(){
+  localStorage.setItem("user","Guest")
+  showApp()
+}
+function logout(){
+  localStorage.removeItem("user")
+  location.reload()
+}
+function showApp(){
+  loginDiv.classList.add("hidden")
+  appDiv.classList.remove("hidden")
+  render()
+}
+if(localStorage.getItem("user")) showApp()
 
+/* ---------- EXPENSE ---------- */
+function save(){
+  localStorage.setItem("expenses",JSON.stringify(expenses))
+}
 function addExpense(){
-  const name = nameInput.value
-  const amount = +amountInput.value
-  if(!name || !amount) return
-
+  if(!nameInput.value || !amountInput.value) return
   expenses.push({
-    name,
-    amount,
-    category: category.value,
-    type: type.value || "optional"
+    name:nameInput.value,
+    amount:+amountInput.value,
+    category:category.value,
+    type:type.value
   })
   save()
   render()
 }
-
 function remove(i){
   expenses.splice(i,1)
   save()
   render()
 }
-
 function render(){
-  list.innerHTML = ""
-  let total = 0
-
+  list.innerHTML=""
+  let total=0
   expenses.forEach((e,i)=>{
-    total += e.amount
-    list.innerHTML += `
-      <div class="expense">
-        <span>${e.name} – Rs ${e.amount}</span>
+    total+=e.amount
+    list.innerHTML+=`
+    <div class="expense card">
+      <div class="row">
+        <b>${e.name}</b>
+        <button onclick="remove(${i})">❌</button>
+      </div>
+      <div class="row">
         <span class="badge ${e.category}">${e.category}</span>
         <span class="badge ${e.type}">${e.type}</span>
-        <button onclick="remove(${i})">❌</button>
-      </div>`
+        <span>Rs ${e.amount}</span>
+      </div>
+    </div>`
   })
-  totalEl.textContent = "Total: Rs " + total
+  totalEl.textContent="Total: Rs "+total
 }
 
+/* ---------- ANALYSIS ---------- */
 function showAnalysis(){
   analysis.classList.remove("hidden")
-  drawCharts()
+  aiInsights()
+  charts()
 }
-
 function hideAnalysis(){
   analysis.classList.add("hidden")
 }
-
-function drawCharts(){
-  const cat = {}, type = {}
+function aiInsights(){
+  let total=0, wish=0, cat={}
   expenses.forEach(e=>{
-    cat[e.category] = (cat[e.category]||0)+e.amount
-    type[e.type] = (type[e.type]||0)+e.amount
+    total+=e.amount
+    if(e.type==="wish") wish+=e.amount
+    cat[e.category]=(cat[e.category]||0)+e.amount
   })
-
-  new Chart(pie,{
-    type:"pie",
-    data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat)}]}
+  let maxCat = Object.keys(cat).sort((a,b)=>cat[b]-cat[a])[0]
+  insights.innerHTML = `
+  🔍 You spend most on <b>${maxCat || "nothing yet"}</b><br>
+  💸 Wishes take <b>${Math.round(wish/total*100||0)}%</b> of your spending<br>
+  📌 Tip: Reduce wishes & track daily needs
+  `
+}
+function charts(){
+  const cat={}, type={}
+  expenses.forEach(e=>{
+    cat[e.category]=(cat[e.category]||0)+e.amount
+    type[e.type]=(type[e.type]||0)+e.amount
   })
-
-  new Chart(bar,{
-    type:"bar",
-    data:{labels:Object.keys(type),datasets:[{data:Object.values(type)}]}
-  })
+  new Chart(pie,{type:"pie",data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat)}]}})
+  new Chart(bar,{type:"bar",data:{labels:Object.keys(type),datasets:[{data:Object.values(type)}]}})
 }
 
-const nameInput = document.getElementById("name")
-const amountInput = document.getElementById("amount")
-const category = document.getElementById("category")
-const type = document.getElementById("type")
-const list = document.getElementById("list")
-const totalEl = document.getElementById("total")
-const analysis = document.getElementById("analysis")
-const pie = document.getElementById("pie")
-const bar = document.getElementById("bar")
-
-render()
+/* ---------- ELEMENTS ---------- */
+const loginDiv=login
+const appDiv=app
+const nameInput=name
+const amountInput=amount
+const list=document.getElementById("list")
+const totalEl=total
 </script>
 
 </body>
