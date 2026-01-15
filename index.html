@@ -38,7 +38,6 @@ button{background:var(--accent);font-weight:700;cursor:pointer}
 .small{font-size:13px;color:#94a3b8}
 a{color:var(--accent);text-decoration:none}
 canvas{margin-top:20px}
-.logout{background:#ef4444}
 </style>
 </head>
 
@@ -46,23 +45,7 @@ canvas{margin-top:20px}
 
 <div class="container">
 
-<!-- 🔐 LOGIN -->
-<div id="login" class="card">
 <h1>💰 Expense Tracker</h1>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<button class="secondary" onclick="guest()">Skip & Continue</button>
-<p class="small">Login is stored locally (demo mode)</p>
-</div>
-
-<!-- APP -->
-<div id="app" class="hidden">
-
-<div class="row">
-<h2>Dashboard</h2>
-<button class="logout" onclick="logout()">Logout</button>
-</div>
 
 <div class="card">
 <input id="name" placeholder="Expense name">
@@ -73,6 +56,7 @@ canvas{margin-top:20px}
 <option value="outdoor">Outdoor</option>
 <option value="food">Food</option>
 <option value="travel">Travel</option>
+<option value="other">Other</option>
 </select>
 
 <select id="type">
@@ -89,57 +73,35 @@ canvas{margin-top:20px}
 
 <button class="secondary" onclick="showAnalysis()">📊 View Analysis</button>
 
-<!-- ANALYSIS -->
 <div id="analysis" class="card hidden">
 <h2>Insights & Analysis 🤖</h2>
 <p id="insights"></p>
-
 <canvas id="pie"></canvas>
 <canvas id="bar"></canvas>
-
 <button class="secondary" onclick="hideAnalysis()">⬅ Back</button>
 </div>
 
 </div>
-</div>
 
 <script>
 let expenses = JSON.parse(localStorage.getItem("expenses")) || []
-
-/* ---------- AUTH ---------- */
-function login(){
-  localStorage.setItem("user", user.value)
-  showApp()
-}
-function guest(){
-  localStorage.setItem("user","Guest")
-  showApp()
-}
-function logout(){
-  localStorage.removeItem("user")
-  location.reload()
-}
-function showApp(){
-  loginDiv.classList.add("hidden")
-  appDiv.classList.remove("hidden")
-  render()
-}
-if(localStorage.getItem("user")) showApp()
 
 /* ---------- EXPENSE ---------- */
 function save(){
   localStorage.setItem("expenses",JSON.stringify(expenses))
 }
 function addExpense(){
-  if(!nameInput.value || !amountInput.value) return
+  if(!name.value || !amount.value) return
   expenses.push({
-    name:nameInput.value,
-    amount:+amountInput.value,
+    name:name.value,
+    amount:+amount.value,
     category:category.value,
     type:type.value
   })
   save()
   render()
+  name.value = ""
+  amount.value = ""
 }
 function remove(i){
   expenses.splice(i,1)
@@ -187,7 +149,7 @@ function aiInsights(){
   insights.innerHTML = `
   🔍 Highest spending on <b>${maxCat || "none"}</b><br>
   💸 Wishes are <b>${Math.round(wish/total*100||0)}%</b> of total<br>
-  📌 Try reducing unnecessary expenses!
+  📌 Tip: Reduce unnecessary spending & track needs
   `
 }
 function charts(){
@@ -201,13 +163,16 @@ function charts(){
 }
 
 /* ---------- ELEMENTS ---------- */
-const loginDiv=login
-const appDiv=app
-const nameInput=name
-const amountInput=amount
+const name=document.getElementById("name")
+const amount=document.getElementById("amount")
+const category=document.getElementById("category")
+const type=document.getElementById("type")
 const list=document.getElementById("list")
-const totalEl=total
+const totalEl=document.getElementById("total")
+const analysis=document.getElementById("analysis")
+const insights=document.getElementById("insights")
 
+render()
 </script>
 
 </body>
