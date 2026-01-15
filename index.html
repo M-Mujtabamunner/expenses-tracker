@@ -86,7 +86,6 @@ canvas{margin-top:20px}
 <script>
 let expenses = JSON.parse(localStorage.getItem("expenses")) || []
 
-/* ---------- EXPENSE ---------- */
 function save(){
   localStorage.setItem("expenses",JSON.stringify(expenses))
 }
@@ -129,7 +128,7 @@ function render(){
   totalEl.textContent="Total: Rs "+total
 }
 
-/* ---------- ANALYSIS ---------- */
+
 function showAnalysis(){
   analysis.classList.remove("hidden")
   aiInsights()
@@ -162,7 +161,6 @@ function charts(){
   new Chart(bar,{type:"bar",data:{labels:Object.keys(type),datasets:[{data:Object.values(type)}]}})
 }
 
-/* ---------- ELEMENTS ---------- */
 const name=document.getElementById("name")
 const amount=document.getElementById("amount")
 const category=document.getElementById("category")
