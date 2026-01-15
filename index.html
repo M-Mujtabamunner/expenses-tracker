@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --card:#020617;
+  --accent:#38bdf8;
+  --text:#e5e7eb;
+}
+*{box-sizing:border-box;font-family:system-ui}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:16px;
+}
+h1,h2{text-align:center}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:var(--accent);
+  font-weight:bold;
+  cursor:pointer;
+}
+.expense{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+  font-size:14px;
+}
+.badge{
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+.home{background:#22c55e}
+.outdoor{background:#f97316}
+.need{background:#eab308}
+.wish{background:#ec4899}
+.nav{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+a{color:var(--accent);text-decoration:none}
+canvas{margin-top:20px}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="nav">
+<h2>💰 Expense Tracker</h2>
+<a href="#" onclick="showAnalysis()">📊 Analysis</a>
+</div>
+
+<!-- ADD EXPENSE -->
+<div class="card">
+<input id="name" placeholder="Expense name">
+<input id="amount" type="number" placeholder="Amount">
+
+<select id="category">
+<option value="home">Home</option>
+<option value="outdoor">Outdoor</option>
+<option value="food">Food</option>
+<option value="travel">Travel</option>
+</select>
+
+<select id="type">
+<option value="need">Need</option>
+<option value="wish">Wish</option>
+<option value="">Optional</option>
+</select>
+
+<button onclick="addExpense()">Add Expense</button>
+</div>
+
+<!-- EXPENSE LIST -->
+<div id="list"></div>
+
+<h3 id="total"></h3>
+
+<!-- ANALYSIS -->
+<div id="analysis" class="hidden">
+<h2>📊 Analysis</h2>
+<a href="#" onclick="hideAnalysis()">⬅ Back</a>
+
+<canvas id="pie"></canvas>
+<canvas id="bar"></canvas>
+</div>
+
+</div>
+
+<script>
+let expenses = JSON.parse(localStorage.getItem("expenses")) || []
+
+function save(){
+  localStorage.setItem("expenses", JSON.stringify(expenses))
+}
+
+function addExpense(){
+  const name = nameInput.value
+  const amount = +amountInput.value
+  if(!name || !amount) return
+
+  expenses.push({
+    name,
+    amount,
+    category: category.value,
+    type: type.value || "optional"
+  })
+  save()
+  render()
+}
+
+function remove(i){
+  expenses.splice(i,1)
+  save()
+  render()
+}
+
+function render(){
+  list.innerHTML = ""
+  let total = 0
+
+  expenses.forEach((e,i)=>{
+    total += e.amount
+    list.innerHTML += `
+      <div class="expense">
+        <span>${e.name} – Rs ${e.amount}</span>
+        <span class="badge ${e.category}">${e.category}</span>
+        <span class="badge ${e.type}">${e.type}</span>
+        <button onclick="remove(${i})">❌</button>
+      </div>`
+  })
+  totalEl.textContent = "Total: Rs " + total
+}
+
+function showAnalysis(){
+  analysis.classList.remove("hidden")
+  drawCharts()
+}
+
+function hideAnalysis(){
+  analysis.classList.add("hidden")
+}
+
+function drawCharts(){
+  const cat = {}, type = {}
+  expenses.forEach(e=>{
+    cat[e.category] = (cat[e.category]||0)+e.amount
+    type[e.type] = (type[e.type]||0)+e.amount
+  })
+
+  new Chart(pie,{
+    type:"pie",
+    data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat)}]}
+  })
+
+  new Chart(bar,{
+    type:"bar",
+    data:{labels:Object.keys(type),datasets:[{data:Object.values(type)}]}
+  })
+}
+
+const nameInput = document.getElementById("name")
+const amountInput = document.getElementById("amount")
+const category = document.getElementById("category")
+const type = document.getElementById("type")
+const list = document.getElementById("list")
+const totalEl = document.getElementById("total")
+const analysis = document.getElementById("analysis")
+const pie = document.getElementById("pie")
+const bar = document.getElementById("bar")
+
+render()
+</script>
+
+</body>
+</html>
